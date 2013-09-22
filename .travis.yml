@@ -1,7 +1,59 @@
-language: python
+language:
+  - python
+  - node_js
+
 python:
   - "2.7"
-install: "pip install -r requirements.txt --use-mirrors"
+
+env:
+  global:
+
+    # APPENGINE_EMAIL: Currently uses Tarjei Husøy's
+    - secure: "FGpfqvDJcBXDlHYPJgbZf5kV9t5jnSZo5k+7KLfq19kas1RVvCnM25JfXU0cFdUiTQ5q7aOL3xuHGYC+HTg+nlDOdD+V6elssSeA8HldUnRO/JZor7iatd2+sDBFBrFMOWGqxwtNrUA03/YY/5OHSFp0+d1zRrk3bSvrvoUWCKw="
+
+    # APPENGINE_PW: Password for above email
+    - secure: "OsV7OzqrPsSmV8XAW7qd3PuHFwyALLNfuxArn2Bz6YWsm30duFqkaS7Jh6cTbuKFMI9aXxVOsM5sYlxxpAhdmbz6SSaKob8mkFt4MljKBGAya8XRSV5oUUcZ8+q0uUd34vzaoRYN4aIoyBoMYxQjah/05WkEk2HJxq0ZeJF3KMg="
+
+    # FACEBOOK_API_KEY
+    - secure: ""
+
+    # SECRET_KEY
+    - secure: ""
+
+install:
+
+  # Python stuff
+  - pip install -r requirements.txt --use-mirrors
+
+  # App Engine SDK
+  - sudo apt-get install -qq wget unzip
+  - wget -O /tmp/appengine_sdk.zip https://googleappengine.googlecode.com/files/google_appengine_1.8.4.zip
+  - unzip -q /tmp/appengine_sdk.zip -d /tmp
+
+  # Install compass
+  - gem update --system
+  - gem install compass
+
+  # Install grunt-cli and grunt
+  - npm install -g grunt-cli
+  - npm install
+
 script:
+  - grunt lint --force
+
+  # Do the fun
   - grunt build
-  #- grunt deploy
+
+  # We should have had some tests here
+  # - grunt test
+
+  # If master -> deploy
+  #- if [[ $TRAVIS_BRANCH == 'master' ]]; then grunt deploy; fi
+
+after_success:
+
+  # Bump version number
+  # - grunt bump or similar
+
+  # Upload to app engine
+  - echo $APPENGINE_PW | /tmp/google_appengine/appcfg.py update . --email=$APPENGINE_EMAIL --passin
